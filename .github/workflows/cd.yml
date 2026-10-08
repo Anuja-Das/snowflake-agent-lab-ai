@@ -26,8 +26,6 @@ jobs:
       - uses: jdx/mise-action@v2
 
       - uses: Snowflake-Labs/snowflake-cli-action@v2
-        with:
-          cli-version: "latest"
 
       - name: Install dependencies
         run: uv sync --all-groups
