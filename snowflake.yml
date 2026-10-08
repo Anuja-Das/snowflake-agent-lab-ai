@@ -1,15 +1,13 @@
-definition_version: 1
+definition_version: "2"
 
-snowpark:
-  procedures:
-    - name: snowflake_agent_job
-      handler: main.main
-      signature: ""
-      returns: string
-      runtime: "3.11"
-      stage_name: DEMO_DB.DEMO_SCHEMA.DEV_STAGE
-      artifacts:
-        - src: main.py
-          dest: snowflake_agent_job/
-      packages:
-        - snowflake-snowpark-python
+entities:
+  snowflake_agent_job:
+    type: procedure
+    stage: DEMO_DB.DEMO_SCHEMA.DEV_STAGE
+    artifacts:
+      - src: main.py
+        dest: snowflake_agent_job/
+    handler: main.main
+    returns: string
+    signature: ""
+    runtime: "3.11"

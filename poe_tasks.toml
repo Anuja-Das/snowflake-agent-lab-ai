@@ -2,5 +2,5 @@
 test = "pytest"
 lint = "ruff check ."
 snow-validate = "snow snowpark build"
-snow-deploy-dev = "snow snowpark deploy --replace"
+snow-deploy-dev = "python _deploy.py"
 snow-run-dev = "snow snowpark execute procedure DEMO_DB.DEMO_SCHEMA.SNOWFLAKE_AGENT_JOB()"
