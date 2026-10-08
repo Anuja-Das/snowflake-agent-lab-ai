@@ -23,7 +23,7 @@ jobs:
 
       - uses: jdx/mise-action@v2
 
-      - uses: Snowflake-Labs/snowflake-cli-action@v1
+      - uses: Snowflake-Labs/snowflake-cli-action@v2
         with:
           cli-version: "latest"
 
