@@ -44,7 +44,7 @@ Writes `~/.snowflake/config.toml` from GitHub Secrets at runtime — no credenti
 | Setup | `Snowflake-Labs/snowflake-cli-action@v2` | Installs the Snowflake CLI |
 | Configure | writes `~/.snowflake/config.toml` | Builds the CLI connection config from GitHub Secrets |
 | Install | `uv sync --all-groups` | Installs all dependencies from `pyproject.toml` |
-| Deploy | `uv run poe snow-deploy-dev` | Uploads `main.py` to `DEMO_DB.DEMO_SCHEMA.DEV_STAGE` and creates/replaces `SNOWFLAKE_AGENT_JOB` stored procedure |
+| Deploy | `uv run poe snow-deploy-dev` | Runs `_deploy.py`, which: (1) writes a temporary `requirements.txt` with `snowflake-snowpark-python`, (2) runs `snow snowpark build` to resolve Anaconda packages into `requirements.snowflake.txt`, (3) runs `snow snowpark deploy --replace` to upload `main.py` and create/replace the `SNOWFLAKE_AGENT_JOB` stored procedure with the correct `PACKAGES` clause, (4) cleans up both temp files |
 | Run | `uv run poe snow-run-dev` | Calls `DEMO_DB.DEMO_SCHEMA.SNOWFLAKE_AGENT_JOB()` and returns its output |
 
 ### Viewing procedure output
