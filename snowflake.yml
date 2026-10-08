@@ -11,3 +11,5 @@ entities:
     returns: string
     signature: ""
     runtime: "3.11"
+    packages:
+      - snowflake-snowpark-python

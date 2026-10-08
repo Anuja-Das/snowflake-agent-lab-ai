@@ -4,43 +4,70 @@
 - **mise** — manages Python 3.11 + uv
 - **uv** — dependency management and virtual environment
 - **poethepoet (poe)** — task runner (`poe_tasks.toml`)
-- **Snowflake CLI** — snowpark build / deploy / execute (installed via `Snowflake-Labs/snowflake-cli-action@v1` GitHub Action)
+- **Snowflake CLI** — snowpark deploy / execute (installed via `Snowflake-Labs/snowflake-cli-action@v2` GitHub Action)
+
+---
+
+## Local Development
+
+Install dependencies locally using:
+```bash
+pip install -r requirements_local.txt
+```
+
+`requirements_local.txt` is for local use only and is never used by the CI/CD pipeline.
 
 ---
 
 ## CI (Continuous Integration)
 
 Triggers on every push to `main` and on pull requests.
+No Snowflake credentials required — runs lint and tests only.
 
 | Step | Command | What it does |
 |------|---------|--------------|
 | Setup | `jdx/mise-action@v2` | Installs Python 3.11 + uv |
-| Setup | `Snowflake-Labs/snowflake-cli-action@v1` | Installs the Snowflake CLI |
-| Install | `uv sync --all-groups` | Installs all dependencies (main + dev) |
+| Install | `uv sync --all-groups` | Installs all dependencies (main + dev) from `pyproject.toml` |
 | Lint | `uv run poe lint` | Runs `ruff check .` to catch style/syntax errors |
 | Test | `uv run poe test` | Runs `pytest tests/` to validate core behaviour |
-| Validate | `uv run poe snow-validate` | Builds the Snowpark artifact from `snowflake.yml` to catch config errors |
 
 ---
 
 ## CD (Continuous Deployment)
 
 Triggers only when CI completes successfully.
+Writes `~/.snowflake/config.toml` from GitHub Secrets at runtime — no credentials stored in the repo.
 
 | Step | Command | What it does |
 |------|---------|--------------|
-| Setup | same as CI | mise + Snowflake CLI + uv sync |
-| Deploy | `uv run poe snow-deploy-dev` | Uploads `main.py` to `DEV_STAGE` and creates/replaces the `SNOWFLAKE_AGENT_JOB` stored procedure |
-| Run | `uv run poe snow-run-dev` | Calls `SNOWFLAKE_AGENT_JOB()` and returns its output |
+| Setup | `jdx/mise-action@v2` | Installs Python 3.11 + uv |
+| Setup | `Snowflake-Labs/snowflake-cli-action@v2` | Installs the Snowflake CLI |
+| Configure | writes `~/.snowflake/config.toml` | Builds the CLI connection config from GitHub Secrets |
+| Install | `uv sync --all-groups` | Installs all dependencies from `pyproject.toml` |
+| Deploy | `uv run poe snow-deploy-dev` | Uploads `main.py` to `DEMO_DB.DEMO_SCHEMA.DEV_STAGE` and creates/replaces `SNOWFLAKE_AGENT_JOB` stored procedure |
+| Run | `uv run poe snow-run-dev` | Calls `DEMO_DB.DEMO_SCHEMA.SNOWFLAKE_AGENT_JOB()` and returns its output |
 
 ### Viewing procedure output
-1. Go to **Snowsight** → **Data** → **Databases** → your database → **Schemas** → your schema → **Procedures**
+1. Go to **Snowsight** → **Data** → **Databases** → `DEMO_DB` → **Schemas** → `DEMO_SCHEMA` → **Procedures**
 2. Find `SNOWFLAKE_AGENT_JOB`
-3. Click **Run** or query directly: `CALL SNOWFLAKE_AGENT_JOB();`
+3. Click **Run** or query directly: `CALL DEMO_DB.DEMO_SCHEMA.SNOWFLAKE_AGENT_JOB();`
+
+---
+
+## One-time Snowflake Setup
+
+Run once in Snowsight before the first deploy:
+```sql
+CREATE DATABASE IF NOT EXISTS DEMO_DB;
+CREATE SCHEMA IF NOT EXISTS DEMO_DB.DEMO_SCHEMA;
+CREATE STAGE IF NOT EXISTS DEMO_DB.DEMO_SCHEMA.DEV_STAGE;
+```
 
 ---
 
 ## Required GitHub Secrets
+
+Go to **Settings → Secrets and variables → Actions** in the GitHub repo and add:
 
 | Secret | Description |
 |--------|-------------|
@@ -48,6 +75,6 @@ Triggers only when CI completes successfully.
 | `SNOWFLAKE_USER` | Snowflake username |
 | `SNOWFLAKE_PASSWORD` | Snowflake password or service account password |
 | `SNOWFLAKE_WAREHOUSE` | Warehouse to use e.g. `COMPUTE_WH` |
-| `SNOWFLAKE_DATABASE` | Target database |
-| `SNOWFLAKE_SCHEMA` | Target schema |
+| `SNOWFLAKE_DATABASE` | Target database e.g. `DEMO_DB` |
+| `SNOWFLAKE_SCHEMA` | Target schema e.g. `DEMO_SCHEMA` |
 | `SNOWFLAKE_ROLE` | Role with privileges to create stages and procedures |
